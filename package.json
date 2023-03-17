@@ -1,0 +1,16 @@
+{
+  "name": "interview-task",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "local:up": "./scripts/local-up.sh",
+    "local:down": "./scripts/local-down.sh",
+    "migration:create": "./scripts/migration-create.sh",
+    "migration:run": "./scripts/migration-run.sh",
+    "migration:revert": "./scripts/migration-revert.sh",
+    "test:e2e": "./scripts/test-e2e.sh"
+  }
+}
