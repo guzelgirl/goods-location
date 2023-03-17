@@ -6,7 +6,7 @@ import { goodsService } from './services/goods.service';
 import { sizeService } from './services/size.service';
 import { sectionService } from './services/section.service';
 import { stillageService } from './services/stillage.service';
-import { HOSTNAME, GOODS_LOCATION_URL } from './conts';
+import { GOODS_LOCATION_URL } from './conts';
 
 describe('GoodsLocation controller (e2e)', () => {
   let app: INestApplication;
@@ -61,12 +61,18 @@ describe('GoodsLocation controller (e2e)', () => {
     });
     expect(status).toEqual(201);
     goodsLocation = body;
-
-    console.log('goodsLocation', goodsLocation);
   });
 
-  it('Get locations /api/goodsLocation (GET)', async () => {
+  it('Get all goods locations /api/goodsLocation (GET)', async () => {
     return request(HOST).get(GOODS_LOCATION_URL).expect(200);
+  });
+
+  it('Get locations of goods /api/goodsLocation/:goodsInfo/:quantity (GET)', async () => {
+    const quantity = 5;
+    const { status, body } = await request(HOST)
+      .get(`${GOODS_LOCATION_URL}/${goodsInfo}/${quantity}`)
+      .expect(200);
+    expect(status).toEqual(200);
   });
 
   it('/ (GET)', () => {
