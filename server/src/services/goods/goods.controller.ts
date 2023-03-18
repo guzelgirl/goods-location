@@ -21,7 +21,6 @@ export class GoodsController {
   @ApiBody({ type: CreateGoodsDto })
   @Post()
   async createOne(@Body() goodsDto: CreateGoodsDto) {
-    console.log('goodsDto', goodsDto);
     return await this.goodsService.create(goodsDto);
   }
 
@@ -50,7 +49,7 @@ export class GoodsController {
   @Put(':id')
   async update(@Body() goodsDto: CreateGoodsDto, @Param('id') id) {
     try {
-      await this.goodsService.update(id, goodsDto);
+      return await this.goodsService.update(id, goodsDto);
     } catch (error) {
       if (error instanceof GoodsNotFoundError) {
         throw new NotFoundException(error.message);

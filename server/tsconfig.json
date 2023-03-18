@@ -5,20 +5,22 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    // "allowSyntheticDefaultImports": true,
-    "target": "es2017",
+    "target": "es2020",
     "sourceMap": true,
     "outDir": "./dist",
     // "baseUrl": "./",
     "incremental": true,
-    // "skipLibCheck": true,
-    // "strictNullChecks": false,
-    // "noImplicitAny": false,
-    // "strictBindCallApply": false,
-    // "forceConsistentCasingInFileNames": false,
-    // "noFallthroughCasesInSwitch": false
     "esModuleInterop": true,
     "preserveSymlinks": true,
     "allowJs": true
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.spec.ts",
+    "test/**/*.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -3,15 +3,15 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
+  InternalServerErrorException,
+  Logger,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AddGoodsLocationDto } from '../../dto/add-goods-location.dto';
 import { CreateGoodsLocationDto } from '../../dto/create-goods-location.dto';
-import { CreateGoodsDto } from '../../dto/create-goods.dto';
-import { GoodsNotFoundError } from '../../errors/goods.error';
 import { GoodsLocationService } from './goodsLocation.service';
 
 @ApiTags('goodsLocation')
@@ -19,10 +19,14 @@ import { GoodsLocationService } from './goodsLocation.service';
 export class GoodsLocationController {
   constructor(private readonly goodsLocationService: GoodsLocationService) {}
 
-  @ApiBody({ type: CreateGoodsLocationDto })
-  @Post()
-  async createOne(@Body() goodsLocationDto: CreateGoodsLocationDto) {
-    return await this.goodsLocationService.create(goodsLocationDto);
+  @ApiBody({ type: AddGoodsLocationDto })
+  @Post('add')
+  async addLocation(@Body() goodsLocationDto: AddGoodsLocationDto) {
+    try {
+      return await this.goodsLocationService.addLocation(goodsLocationDto);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   @ApiParam({
@@ -42,7 +46,58 @@ export class GoodsLocationController {
     @Param('goodsInfo') goodsInfo,
     @Param('quantity') quantity,
   ) {
-    return await this.goodsLocationService.getLocation(goodsInfo, quantity);
+    try {
+      return await this.goodsLocationService.getLocation(goodsInfo, quantity);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @ApiParam({
+    name: 'quantity',
+    type: Number,
+    description: 'quantity',
+    example: 5,
+  })
+  @ApiParam({
+    name: 'goodsInfo',
+    type: String,
+    description: 'goods info (goodId, size)',
+    example: 'L10005 SM',
+  })
+  @Put('substract/:goodsInfo/:quantity')
+  async substractGoods(
+    @Param('goodsInfo') goodsInfo,
+    @Param('quantity') quantity,
+  ) {
+    try {
+      return await this.goodsLocationService.subtractGoods(goodsInfo, quantity);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @ApiBody({ type: CreateGoodsLocationDto })
+  @Post()
+  async create(@Body() goodsLocationDto: CreateGoodsLocationDto) {
+    try {
+      return await this.goodsLocationService.create(goodsLocationDto);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  @ApiBody({ type: CreateGoodsLocationDto })
+  @Put(':id')
+  async update(
+    @Body() goodsLocationDto: CreateGoodsLocationDto,
+    @Param('id') id,
+  ) {
+    try {
+      return await this.goodsLocationService.update(id, goodsLocationDto);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   @Get()
@@ -50,32 +105,9 @@ export class GoodsLocationController {
     return await this.goodsLocationService.getList();
   }
 
-  /*
-  @ApiParam({
-    name: 'id',
-    type: String,
-    description: 'goods id',
-  })
-  @ApiResponse({ status: 500, description: 'Unexpected server error' })
   @Get(':id')
   async getOne(@Param('id') id) {
     return await this.goodsLocationService.getOne(id);
-  }*/
-
-  @ApiParam({
-    name: 'id',
-    type: String,
-    description: 'goods id',
-  })
-  @Put('id')
-  async update(@Param('id') id, goodsDto: CreateGoodsDto) {
-    try {
-      await this.goodsLocationService.update(id, goodsDto);
-    } catch (error) {
-      if (error instanceof GoodsNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-    }
   }
 
   @ApiParam({
@@ -83,7 +115,7 @@ export class GoodsLocationController {
     type: String,
     description: 'goods id',
   })
-  @Delete('id')
+  @Delete(':id')
   async delete(@Param('id') id) {
     await this.goodsLocationService.delete(id);
   }

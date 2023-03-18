@@ -37,7 +37,7 @@ export class SectionService {
   async delete(id: number) {
     const section = await this.sectionRepository.findOneBy({ id });
     if (section) {
-      return await this.sectionRepository.delete(section);
+      return await this.sectionRepository.remove(section);
     }
     return null;
   }

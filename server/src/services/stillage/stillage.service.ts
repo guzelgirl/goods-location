@@ -37,7 +37,7 @@ export class StillageService {
   async delete(id: number) {
     const stillage = await this.stillageRepository.findOneBy({ id });
     if (stillage) {
-      return await this.stillageRepository.delete(stillage);
+      return await this.stillageRepository.remove(stillage);
     }
     return null;
   }

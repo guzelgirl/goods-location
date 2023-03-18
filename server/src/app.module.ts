@@ -9,10 +9,20 @@ import { GoodsLocationModule } from './services/goodsLocation/goodsLocation.modu
 import { StillageModule } from './services/stillage/stillage.module';
 import { SectionModule } from './services/section/section.module';
 import { SizeModule } from './services/size/size.module';
+import { ConfigService, ConfigModule } from '@nestjs/config';
+import { dataSource } from './data-source';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(ormconfig),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: () => ormconfig,
+      async dataSourceFactory() {
+        await dataSource.initialize();
+        return dataSource;
+      },
+    }),
     PopulateModule,
     GoodsModule,
     GoodsLocationModule,

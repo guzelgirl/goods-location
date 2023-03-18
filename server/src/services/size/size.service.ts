@@ -37,7 +37,7 @@ export class SizeService {
   async delete(id: number) {
     const size = await this.sizeRepository.findOneBy({ id });
     if (size) {
-      return await this.sizeRepository.delete(size);
+      return await this.sizeRepository.remove(size);
     }
     return null;
   }

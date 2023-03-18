@@ -32,13 +32,13 @@ export class GoodsService {
     if (goods == null) {
       throw new GoodsNotFoundError(id);
     }
-    await this.goodsRepository.save({ ...goods, ...goodsDto });
+    return await this.goodsRepository.save({ ...goods, ...goodsDto });
   }
 
   async delete(id: number) {
     const goods = await this.goodsRepository.findOneBy({ id });
     if (goods) {
-      return await this.goodsRepository.delete(goods);
+      return await this.goodsRepository.remove(goods);
     }
     return null;
   }

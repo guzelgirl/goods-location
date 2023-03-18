@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateGoodsDto } from '../../dto/create-goods.dto';
 import { GoodsEntity } from '../../entities/goods.entity';
-import { Repository } from 'typeorm';
-import { GoodsNotFoundError } from '../../errors/goods.error';
+import { In, Repository } from 'typeorm';
+import { GoodsLocationNotFoundError } from '../../errors/goodsLocation.error';
 import { GoodsLocationEntity } from '../../entities/goodsLocation.entity';
-import { CreateGoodsLocationDto } from '../../dto/create-goods-location.dto';
+import { AddGoodsLocationDto } from '../../dto/add-goods-location.dto';
 import { SizeEntity } from '../../entities/size.entity';
 import { StillageEntity } from '../../entities/stillage.entity';
 import { SectionEntity } from '../../entities/section.entity';
 import { LoggerService } from '../logger/logger.service';
+import { CreateGoodsLocationDto } from '../../dto/create-goods-location.dto';
+import { GoodsNotFoundError } from '../../errors/goods.error';
+import { IGetLocations } from '../../interfaces/get-locations.interface';
 
 @Injectable()
 export class GoodsLocationService {
@@ -27,8 +29,22 @@ export class GoodsLocationService {
     private readonly logger: LoggerService,
   ) {}
 
-  async create(
-    goodsLocationDto: CreateGoodsLocationDto,
+  async create(goodsLocationDto: CreateGoodsLocationDto) {
+    const goodsLocation = this.goodsLocationRepository.create(goodsLocationDto);
+    return await this.goodsLocationRepository.save(goodsLocation);
+  }
+
+  async update(id: number, goodsLocationDto: CreateGoodsLocationDto) {
+    const goodsLocation = await this.goodsLocationRepository.findOneBy({ id });
+
+    if (goodsLocation == null) {
+      throw new GoodsLocationNotFoundError(id);
+    }
+    await this.goodsRepository.save({ ...goodsLocation, ...goodsLocationDto });
+  }
+
+  async addLocation(
+    goodsLocationDto: AddGoodsLocationDto,
   ): Promise<GoodsLocationEntity> {
     const { goodsInfo, locationInfo } = goodsLocationDto;
 
@@ -92,10 +108,15 @@ export class GoodsLocationService {
       result = await this.goodsLocationRepository.save(newLocation);
     }
 
+    this.logger.queryInfo('add location', result);
+
     return result;
   }
 
-  async getLocation(goodsInfo: string, quantity: number) {
+  async getLocation(
+    goodsInfo: string,
+    quantity: number,
+  ): Promise<IGetLocations[]> {
     const [goodsIdInfo, sizeInfo] = goodsInfo.split(' ');
 
     if (goodsIdInfo.indexOf('L') == -1) {
@@ -149,7 +170,9 @@ export class GoodsLocationService {
       where dif_lag <= 0
       )
       
-      select g.id, g.name goods, sz.name size, st.name stillage, sc.name section, quantity, need_quantity, rest
+      select t.id, goodsId, stillageId, sectionId, sizeId, quantity,
+      g.name goods, sz.name size, st.name stillage, sc.name section,
+      need_quantity, rest
       from tab5 t
       left join size_entity sz on t.sizeId = sz.id
       left join stillage_entity st on t.stillageId = st.id
@@ -157,7 +180,21 @@ export class GoodsLocationService {
       left join goods_entity g on t.goodsId = g.id
     `;
     const data = await this.goodsLocationRepository.query(query);
-    return data;
+    const result = data.map((d) => ({
+      ...d,
+      id: Number(d.id),
+      goodsId: Number(d.goodsId),
+      stillageId: Number(d.stillageId),
+      sectionId: Number(d.sectionId),
+      sizeId: Number(d.sizeId),
+      quantity: Number(d.quantity),
+      need_quantity: Number(d.need_quantity),
+      rest: Number(d.rest),
+    }));
+
+    this.logger.queryInfo('get goods location by params', { goodsId, sizeId: size.id, quantity });
+
+    return result;
   }
 
   async getList() {
@@ -166,35 +203,56 @@ export class GoodsLocationService {
   }
 
   async getOne(id: number) {
-    const goods = await this.goodsLocationRepository.findOne({
-      where: { goodsId: id },
+    const location = await this.goodsLocationRepository.findOne({
+      where: { id },
       relations: {
+        goods: true,
         section: true,
         stillage: true,
         size: true,
       },
     });
-    return goods;
-  }
-
-  async update(id: number, goodsDto: CreateGoodsDto) {
-    const goods = await this.goodsRepository.findOneBy({ id });
-
-    if (goods == null) {
-      throw new GoodsNotFoundError(id);
-    }
-
-    await this.goodsRepository.update(
-      id,
-      this.goodsRepository.create(goodsDto),
-    );
+    return location;
   }
 
   async delete(id: number) {
-    const goods = await this.goodsRepository.findOneBy({ id });
-    if (goods) {
-      return await this.goodsRepository.delete(goods);
+    const location = await this.goodsLocationRepository.findOneBy({ id });
+    if (location) {
+      return await this.goodsLocationRepository.remove(location);
     }
+    return null;
+  }
+
+  async subtractGoods(goodsInfo: string, quantity: number) {
+    const data = await this.getLocation(goodsInfo, quantity);
+
+    if (data) {
+      for (const loc of data) {
+        const locationDto = {
+          id: loc.id,
+          goodsId: loc.goodsId,
+          stillageId: loc.stillageId,
+          sectionId: loc.sectionId,
+          sizeId: loc.sizeId,
+          quantity: loc.rest,
+        };
+        await this.goodsLocationRepository.save(locationDto);
+      }
+
+      this.logger.queryInfo('substract goods', {
+        goodsId: data[0].goodsId,
+        sizeId: data[0].sizeId,
+        quantity,
+      });
+
+      const ids = data.map((l) => l.id);
+      return await this.goodsLocationRepository.find({
+        where: {
+          id: In(ids),
+        },
+      });
+    }
+
     return null;
   }
 }

@@ -1,5 +1,10 @@
 import { DataSourceOptions } from 'typeorm';
-import { CustomLogger } from './utils/logger';
+import { GoodsEntity } from './entities/goods.entity';
+import { SizeEntity } from './entities/size.entity';
+import { SectionEntity } from './entities/section.entity';
+import { StillageEntity } from './entities/stillage.entity';
+import { GoodsLocationEntity } from './entities/goodsLocation.entity';
+import { LogEntity } from './entities/log.entity';
 
 export const ormconfig: DataSourceOptions = {
   type: 'mysql',
@@ -8,9 +13,17 @@ export const ormconfig: DataSourceOptions = {
   username: 'MYSQL_USER',
   password: 'MYSQL_PASSWORD',
   database: 'goods_db',
-  entities: [`${__dirname}/../**/*.entity.js`],
+  // entities: [`${__dirname}/../**/*.entity.js`],
+  entities: [
+    GoodsEntity,
+    SizeEntity,
+    SectionEntity,
+    StillageEntity,
+    GoodsLocationEntity,
+    LogEntity,
+  ],
   synchronize: true,
   logging: ['query', 'error'],
-  logger: 'file', //new CustomLogger(),
+  logger: 'file',
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
 };

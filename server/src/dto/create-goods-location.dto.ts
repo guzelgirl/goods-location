@@ -1,16 +1,24 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsNumber } from 'class-validator';
 
 export class CreateGoodsLocationDto {
-  @ApiProperty({
-    example: 'AB-3',
-  })
-  @IsString()
-  locationInfo: string;
+  @ApiProperty()
+  @IsNumber()
+  goodsId: number;
 
-  @ApiProperty({
-    example: 'L10007 SM',
-  })
-  @IsString()
-  goodsInfo: string;
+  @ApiProperty()
+  @IsNumber()
+  stillageId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  sectionId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  sizeId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  quantity: number;
 }
